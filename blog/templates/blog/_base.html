@@ -15,6 +15,11 @@
         <div id="sidebar">
             <h2><a href="{% url 'blog:post_list' %}">My blog</a></h2>
             <p>This is my blog. {% total_posts %} written posts so far.</p>
+            <p>
+                <a href="{% url "blog:post_feed" %}">
+                    RSS feed
+                </a>
+            </p>
             <h3>Latest posts</h3>
             {% show_latest_posts %}
             <h3>Most commented posts</h3>
