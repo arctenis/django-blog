@@ -1,3 +1,4 @@
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.core.mail import send_mail
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Count
@@ -6,7 +7,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from taggit.models import Tag
 
-from .forms import CommentForm, EmailPostForm
+from .forms import CommentForm, EmailPostForm, SearchForm
 from .models import Comment, Post
 
 
@@ -97,3 +98,22 @@ def post_comment(request, post_id):
         comment.save()
     context = {"post": post, "form": form, "comment": comment}
     return render(request, "blog/post/comment.html", context)
+
+
+def post_search(request):
+    form = SearchForm()
+    query = None
+    results = []
+
+    if "query" in request.GET:
+        form = SearchForm(request.GET)
+        if form.is_valid():
+            query = form.cleaned_data["query"]
+            search_vector = SearchVector("title", "body")
+            search_query = SearchQuery(query)
+            results = Post.published.annotate(
+                search=SearchVector(search_vector, search_query),
+            ).filter(search=query).order_by("-rank")
+
+    context = {"form": form, "query": query, "results": results}
+    return render(request, "blog/post/search.html", context)
